@@ -21,17 +21,30 @@
         <div class="divider"></div>
         <div class="panel p-2" style="overflow:hidden;">
             <h2 style="margin-left: 2%; margin-top: 1%">Query Formulation</h2>
-            <div class="divider" data-content="GENERAL INPUT"></div>
-            <div class="panel-footer container">
-                <ul style="list-style-type: none;">
-                    <li>
-                        <input class="form-input" type="text" v-model="ginput" style="overflow:hidden;width:50%;"
-                            placeholder="General Search Input" id="general-input">
-                    </li>
-                </ul>
+            <div class="divider" data-content="SET OF RELEVANT STUDY PMIDS"></div><br>
+            <div class="panel-body container">
+                <span class="span-rg">
+                        <strong>
+                            Relevant Set of Study PMIDs
+                        </strong>
+                        <span style="color:red">
+                            *
+                        </span>
+                        :
+                    </span> <div class="divider"></div>
+                <builder id="seed-builder" v-for="(seed, index) in seeds"
+                         :key="seed.id"
+                         v-on:add="addSeed"
+                         v-on:remove="removeSeed"
+                         v-bind:seed="seed"
+                         v-bind:index="index"
+                         v-bind:last="index==seeds.length-1"></builder>
             </div>
+            <span class="span-sm">Use the + and - button above to add or remove relevant study PMIDs.</span>
+            <br>
+            <a href="#/" v-on:click="clearAll" style="width: 10%">Clear All</a>
             <div class="panel-footer">
-                <button class="btn btn-primary" id="formulate-query">
+                <button class="btn btn-primary" id="formulate-query" v-on:click="formulate">
                     <i class="icon icon-forward"></i> Formulate
                 </button>
             </div>
@@ -47,22 +60,67 @@
             </div>
         </div>
     </div>
-        <!--suppress JSUnusedGlobalSymbols -->
-        <script>
-            var vm = new Vue({
-                delimiters: ["[[", "]"],
-                el: "#app",
-                data: {
-
-                    init: true,
-
-                    ginput: null,
-                    query: "hi",
-                },
-                methods: {
-
+    <script type="text/x-template" id="builder">
+        <div class="panel-footer container">
+            <input class="form-input" type="text" v-model="seed.pmid" style="width:50%;" id="general-input"/>
+            <div class="btn-group">
+                <a href="#/" id="remove-seed-from-builder" class="btn btn-action btn-sm" v-on:click="removeSeed"><i class="icon icon-minus"></i></a>
+                <a href="#/" id="add-seed-to-builder" class="btn btn-action btn-sm" v-if="last" v-on:click="addSeed"><i class="icon icon-plus"></i></a>
+            </div>
+        </div>
+    </script>
+    <!--suppress JSUnusedGlobalSymbols -->
+    <script>
+        var structuredID = 0;
+        Vue.component("builder", {
+            delimiters: ["[[", "]]"],
+            template: "#builder",
+            props: ["index", "last", "seed"],
+            data: function () {
+                return {
+                    id: structuredID++,
                 }
-            })
-        </script>
+            },
+            methods: {
+                removeSeed: function () {
+                    this.$emit("remove", this.$props.index);
+                },
+                addSeed: function () {
+                    this.$emit("add", {
+                        pmid: null,
+                    })
+                },
+            }
+        });
+
+        var vm = new Vue({
+            delimiters: ["[[", "]"],
+            el: "#app",
+            data: {
+                seeds: [{pmid: null}],
+                init: true,
+                query: "hi",
+            },
+            methods: {
+                formulate: function () {
+                    console.log(this.seeds)
+                },
+                removeSeed: function (index) {
+                    this.seeds.splice(index, 1)
+                    if (this.seeds.length == 0) {
+                        this.seeds.push({pmid: null});
+                    }
+                },
+                addSeed: function (seed) {
+                    this.seeds.push(seed)
+                },
+                clearAll: function () {
+                    this.seeds = [{pmid: null}];
+                    this.init = false;
+                    this.query = null;
+                }
+            }
+        })
+    </script>
 </body>
 </html>
