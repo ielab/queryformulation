@@ -1,10 +1,9 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/ielab/searchrefiner"
+	"net/http"
 )
 
 type QueryFormulationPlugin struct {
