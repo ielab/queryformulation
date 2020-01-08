@@ -105,10 +105,11 @@
                 formulate: function () {
                     let self = this;
                     var pmids = [];
-                    for (var i = 0; i < seeds.length; i++) {
-                        pmids.push(seeds[i].pmid);
+                    for (var i = 0; i < self.seeds.length; i++) {
+                        pmids.push(self.seeds[i].pmid);
                     }
-                    console.log(pmids);
+                    var strPMID = pmids.toString();
+                    console.log(strPMID);
                 },
                 removeSeed: function (index) {
                     this.seeds.splice(index, 1)
