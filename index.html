@@ -103,7 +103,12 @@
             },
             methods: {
                 formulate: function () {
-                    console.log(this.seeds)
+                    let self = this;
+                    var pmids = [];
+                    for (var i = 0; i < seeds.length; i++) {
+                        pmids.push(seeds[i].pmid);
+                    }
+                    console.log(pmids);
                 },
                 removeSeed: function (index) {
                     this.seeds.splice(index, 1)
