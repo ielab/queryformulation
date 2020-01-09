@@ -30,100 +30,75 @@
                         <span style="color:red">
                             *
                         </span>
-                        :
+                        : (Separate By Comma)
                     </span> <div class="divider"></div>
-                <builder id="seed-builder" v-for="(seed, index) in seeds"
-                         :key="seed.id"
-                         v-on:add="addSeed"
-                         v-on:remove="removeSeed"
-                         v-bind:seed="seed"
-                         v-bind:index="index"
-                         v-bind:last="index==seeds.length-1"></builder>
-            </div>
-            <span class="span-sm">Use the + and - button above to add or remove relevant study PMIDs.</span>
-            <br>
-            <a href="#/" v-on:click="clearAll" style="width: 10%">Clear All</a>
-            <div class="panel-footer">
-                <button class="btn btn-primary" id="formulate-query" v-on:click="formulate">
-                    <i class="icon icon-forward"></i> Formulate
-                </button>
-            </div>
-            <div class="divider" v-show="init"></div>
-            <div>
-                <div style="text-align: center;" v-show="init">
-                    <h3>Formulated Query</h3>
+                <div class="panel-footer container">
+                    <textarea class="form-input" type="text" v-model="seeds" style="width:100%;" id="general-input" rows="5"></textarea>
                 </div>
-                <div v-show="init">
-                    <textarea style="width: 100%" name="query" v-model="query" class="form-input" id="query"
-                        rows="10"></textarea>
+                <br>
+                <a href="#/" v-on:click="clearAll" style="width: 10%">Clear All</a>
+                <div class="panel-footer">
+                    <button class="btn btn-primary" id="formulate-query" v-on:click="formulate">
+                        <i class="icon icon-forward"></i> Formulate
+                    </button>
+                </div>
+                <div class="divider" v-show="init"></div>
+                <div v-show="init" style="width: 49%; margin-left: 1%; float: left; border: slateblue 1px solid;">
+                    <div style="text-align: center;" v-show="init">
+                        <h3>Query With MeSH</h3>
+                    </div>
+                    <div v-show="init">
+                        <textarea style="width: 100%" name="meshQuery" v-model="meshQuery" class="form-input" id="mesh"
+                                  rows="12"></textarea>
+                    </div>
+                </div>
+                <div v-show="init" style="width: 49%; margin-left: 1%; float: left; border: slateblue 1px solid;">
+                    <div style="text-align: center;" v-show="init">
+                        <h3>Query Without MeSH</h3>
+                    </div>
+                    <div v-show="init">
+                        <textarea style="width: 100%" name="noMeshQuery" v-model="noMeshQuery" class="form-input" id="nomesh"
+                                  rows="12"></textarea>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <script type="text/x-template" id="builder">
-        <div class="panel-footer container">
-            <input class="form-input" type="text" v-model="seed.pmid" style="width:50%;" id="general-input"/>
-            <div class="btn-group">
-                <a href="#/" id="remove-seed-from-builder" class="btn btn-action btn-sm" v-on:click="removeSeed"><i class="icon icon-minus"></i></a>
-                <a href="#/" id="add-seed-to-builder" class="btn btn-action btn-sm" v-if="last" v-on:click="addSeed"><i class="icon icon-plus"></i></a>
-            </div>
-        </div>
-    </script>
     <!--suppress JSUnusedGlobalSymbols -->
     <script>
-        var structuredID = 0;
-        Vue.component("builder", {
-            delimiters: ["[[", "]]"],
-            template: "#builder",
-            props: ["index", "last", "seed"],
-            data: function () {
-                return {
-                    id: structuredID++,
-                }
-            },
-            methods: {
-                removeSeed: function () {
-                    this.$emit("remove", this.$props.index);
-                },
-                addSeed: function () {
-                    this.$emit("add", {
-                        pmid: null,
-                    })
-                },
-            }
-        });
-
         var vm = new Vue({
             delimiters: ["[[", "]"],
             el: "#app",
             data: {
-                seeds: [{pmid: null}],
-                init: true,
-                query: "hi",
+                seeds: null,
+                pmids: null,
+
+                init: false,
+
+                noMeshQuery: null,
+                meshQuery: null,
             },
             methods: {
                 formulate: function () {
                     let self = this;
-                    var pmids = [];
-                    for (var i = 0; i < self.seeds.length; i++) {
-                        pmids.push(self.seeds[i].pmid);
+                    if (self.seeds === "" || self.seeds === null) {
+                        window.alert("Relevant Document PMIDs Are Required.")
+                        return;
                     }
-                    var strPMID = pmids.toString();
-                    console.log(strPMID);
-                },
-                removeSeed: function (index) {
-                    this.seeds.splice(index, 1)
-                    if (this.seeds.length == 0) {
-                        this.seeds.push({pmid: null});
-                    }
-                },
-                addSeed: function (seed) {
-                    this.seeds.push(seed)
+                    var seeds = self.seeds;
+                    self.pmids = seeds.split(",");
+                    // Test code
+                    self.meshQuery = seeds;
+                    self.noMeshQuery = seeds;
+                    self.init = true;
+                    // --------------------------
                 },
                 clearAll: function () {
-                    this.seeds = [{pmid: null}];
+                    this.seeds = null;
                     this.init = false;
-                    this.query = null;
+                    this.noMeshQuery = null;
+                    this.meshQuery = null;
+                    this.pmids = null;
                 }
             }
         })
