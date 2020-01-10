@@ -123,7 +123,6 @@
                             self.ready = true;
                             var queriesStr = ev.currentTarget.responseText;
                             var queries = JSON.parse(queriesStr);
-                            console.log(queriesStr);
                             self.noMeshQuery = queries["Query"][0];
                             self.meshQuery = queries["Query"][1];
                         }
