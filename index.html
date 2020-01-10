@@ -118,6 +118,8 @@
                         return;
                     }
                     let request = new XMLHttpRequest();
+                    var el = document.getElementById("formulate-query");
+                    el.classList.add("loading");
                     request.addEventListener("load", function (ev) {
                         if (ev.currentTarget.status === 200) {
                             self.ready = true;
@@ -125,6 +127,7 @@
                             var queries = JSON.parse(queriesStr);
                             self.noMeshQuery = queries["Query"][0];
                             self.meshQuery = queries["Query"][1];
+                            el.classList.remove("loading");
                         }
                     });
                     request.open("POST", "/api/formulate");
