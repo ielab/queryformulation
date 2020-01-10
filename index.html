@@ -19,44 +19,69 @@
             <section class="navbar-section"><a href="/"><i class="icon icon-arrow-left"></i>back</a></section>
         </header>
         <div class="divider"></div>
-        <div class="panel p-2" style="overflow:hidden;">
+        <div class="panel p-2">
             <h2 style="margin-left: 2%; margin-top: 1%">Query Formulation</h2>
             <div class="divider" data-content="SET OF RELEVANT STUDY PMIDS"></div><br>
-            <div class="panel-body container">
-                <span class="span-rg">
+            <div class="panel-body container" style="overflow: hidden">
+                <div class="panel-footer">
+                    <span class="span-rg">
                         <strong>
                             Relevant Set of Study PMIDs
                         </strong>
                         <span style="color:red">
                             *
                         </span>
-                        : (Separate By Comma)
-                    </span> <div class="divider"></div>
+                        : (Separate By Comma, Minimum 30)
+                    </span>
+                </div>
+                <div class="divider"></div>
                 <div class="panel-footer container">
                     <textarea class="form-input" type="text" v-model="seeds" style="width:100%;" id="general-input" rows="5"></textarea>
                 </div>
-                <br>
-                <a href="#/" v-on:click="clearAll" style="width: 10%">Clear All</a>
+                <div class="divider"></div>
+                <div class="panel-footer">
+                    <div>
+                        <span class="span-rg">
+                            <strong>
+                                Select Query Format
+                            </strong>
+                            <span style="color: red">
+                                *
+                            </span>
+                            :
+                        </span>
+                    </div>
+                    <select v-model="lang" style="width: 20%" id="lang">
+                        <option value="pubmed">Pubmed</option>
+                        <option value="medline">Medline</option>
+                    </select>
+                </div>
+                <div class="divider"></div>
+                <div class="panel-footer">
+                    <a href="#/" v-on:click="clearAll" style="width: 10%">Clear All</a>
+                </div>
+
                 <div class="panel-footer">
                     <button class="btn btn-primary" id="formulate-query" v-on:click="formulate">
                         <i class="icon icon-forward"></i> Formulate
                     </button>
                 </div>
-                <div class="divider" v-show="init"></div>
-                <div v-show="init" style="width: 49%; margin-left: 1%; float: left; border: slateblue 1px solid;">
+                <div v-if="init && !ready" class="loading loading-lg"></div>
+                <div class="divider" v-show="init && ready"></div>
+                <div v-show="init && ready" style="width: 49%; margin-left: 1%; float: left; border: slateblue 1px solid;">
                     <div style="text-align: center;" v-show="init">
                         <h3>Query With MeSH</h3>
                     </div>
-                    <div v-show="init">
+                    <div v-show="init && ready">
                         <textarea style="width: 100%" name="meshQuery" v-model="meshQuery" class="form-input" id="mesh"
                                   rows="12"></textarea>
                     </div>
                 </div>
-                <div v-show="init" style="width: 49%; margin-left: 1%; float: left; border: slateblue 1px solid;">
-                    <div style="text-align: center;" v-show="init">
+                <div v-show="init && ready" style="width: 49%; margin-left: 1%; float: left; border: slateblue 1px solid;">
+                    <div style="text-align: center;" v-show="init && ready">
                         <h3>Query Without MeSH</h3>
                     </div>
-                    <div v-show="init">
+                    <div v-show="init && ready">
                         <textarea style="width: 100%" name="noMeshQuery" v-model="noMeshQuery" class="form-input" id="nomesh"
                                   rows="12"></textarea>
                     </div>
@@ -71,9 +96,10 @@
             el: "#app",
             data: {
                 seeds: null,
-                pmids: null,
+                lang: null,
 
                 init: false,
+                ready: false,
 
                 noMeshQuery: null,
                 meshQuery: null,
@@ -81,24 +107,38 @@
             methods: {
                 formulate: function () {
                     let self = this;
+                    self.init = true;
+                    self.ready = false;
                     if (self.seeds === "" || self.seeds === null) {
                         window.alert("Relevant Document PMIDs Are Required.")
                         return;
                     }
-                    var seeds = self.seeds;
-                    self.pmids = seeds.split(",");
-                    // Test code
-                    self.meshQuery = seeds;
-                    self.noMeshQuery = seeds;
-                    self.init = true;
-                    // --------------------------
+                    if (self.lang === "" || self.lang === null) {
+                        window.alert("Return Format Is Required.")
+                        return;
+                    }
+                    let request = new XMLHttpRequest();
+                    request.addEventListener("load", function (ev) {
+                        if (ev.currentTarget.status === 200) {
+                            self.ready = true;
+                            var queriesStr = ev.currentTarget.responseText;
+                            var queries = JSON.parse(queriesStr);
+                            console.log(queriesStr);
+                            self.noMeshQuery = queries["Query"][0];
+                            self.meshQuery = queries["Query"][1];
+                        }
+                    });
+                    request.open("POST", "/api/formulate");
+                    request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    request.send("seeds=" + self.seeds + "&lang=" + self.lang);
                 },
                 clearAll: function () {
                     this.seeds = null;
                     this.init = false;
+                    this.ready = false;
                     this.noMeshQuery = null;
                     this.meshQuery = null;
-                    this.pmids = null;
+                    this.lang = null;
                 }
             }
         })
