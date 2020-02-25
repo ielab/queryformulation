@@ -25,10 +25,10 @@ func (QueryFormulationPlugin) PermissionType() searchrefiner.PluginPermission {
 
 func (QueryFormulationPlugin) Details() searchrefiner.PluginDetails {
 	return searchrefiner.PluginDetails{
-		Title:       "Query Formulation",
-		Description: "Query formulation tool to formulate query from general input.",
+		Title:       "AutoFormulate",
+		Description: "Query formulation tool to formulate query from a set of PMIDs.",
 		Author:      "ielab",
-		Version:     "8.Jan.2020",
+		Version:     "23.Jan.2020",
 		ProjectURL:  "ielab.io/searchrefiner",
 	}
 }
