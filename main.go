@@ -8,6 +8,7 @@ import (
 	"github.com/hscells/transmute"
 	"github.com/hscells/trecresults"
 	"github.com/ielab/searchrefiner"
+	"gopkg.in/olivere/elastic.v7"
 	"net/http"
 	"strings"
 )
@@ -16,7 +17,7 @@ type QueryFormulationPlugin struct {
 }
 
 type queryFormulationResponse struct {
-	Query 			[]string
+	Query []string
 }
 
 func handleQueryFormulation(s searchrefiner.Server, c *gin.Context) {
@@ -43,12 +44,21 @@ func handleQueryFormulation(s searchrefiner.Server, c *gin.Context) {
 		Name:  "None",
 		Query: nil,
 	}
+
+	esClient, err := elastic.NewSimpleClient(
+		elastic.SetURL(s.Config.Services.ElasticsearchUMLSURL),
+		elastic.SetBasicAuth(s.Config.Services.ElasticsearchUMLSUsername, s.Config.Services.ElasticsearchUMLSPassword))
+	if err != nil {
+		panic(err)
+	}
+
 	stat := s.Entrez
 	population := formulation.NewPubMedSet(stat)
 	optimisation := eval.F1Measure
 	optionMinDocs := formulation.ObjectiveMinDocs(30)
-	optionGrid := formulation.ObjectiveGrid([]float64{0.05, 0.10, 0.15, 0.20, 0.25, 0.30},[]float64{0.001, 0.01, 0.02, 0.05, 0.10, 0.20},[]int{1, 5, 10, 15, 20, 25})
-	objFormulator := formulation.NewObjectiveFormulator(query, stat, qrels, population, "None", "None", "cui_semantic_types.txt", "http://ielab-metamap.uqcloud.net", optimisation, optionMinDocs, optionGrid)
+	optionGrid := formulation.ObjectiveGrid([]float64{0.05, 0.10, 0.15, 0.20, 0.25, 0.30}, []float64{0.001, 0.01, 0.02, 0.05, 0.10, 0.20}, []int{1, 5, 10, 15, 20, 25})
+	optionQuery := formulation.ObjectiveQuery(query)
+	objFormulator := formulation.NewObjectiveFormulator(s.Entrez, esClient, trecresults.QrelsFile{Qrels: map[string]trecresults.Qrels{"X": qrels}}, population, "None", "None", "cui_semantic_types.txt", s.Config.Services.MetaMapURL, optimisation, optionMinDocs, optionGrid, optionQuery)
 	q1, q2, _, _, _, err := objFormulator.Derive()
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
