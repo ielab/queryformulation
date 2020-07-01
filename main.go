@@ -20,14 +20,29 @@ type queryFormulationResponse struct {
 	Query []string
 }
 
+func handleFormulationSettings(s searchrefiner.Server, c *gin.Context) {
+	var pmids []string
+	username := s.Perm.UserState().Username(c.Request)
+	temppmids := s.Settings[username].Relevant
+	for _, pmid := range temppmids {
+		pmids = append(pmids, strings.TrimSpace(pmid.String()))
+	}
+	c.JSON(http.StatusOK, pmids)
+}
+
 func handleQueryFormulation(s searchrefiner.Server, c *gin.Context) {
 	var q1Ret string
 	var q2Ret string
-	seedIDs := c.PostForm("seeds")
+	var pmids []string
+	username := s.Perm.UserState().Username(c.Request)
+	temppmids := s.Settings[username].Relevant
+	if len(temppmids) == 0 {
+		c.String(http.StatusInternalServerError, "No relevant PMIDs found.")
+		return
+	}
 	lang := c.PostForm("lang")
-	pmids := strings.Split(seedIDs, ",")
-	for _, pmid := range pmids {
-		pmid = strings.TrimSpace(pmid)
+	for _, pmid := range temppmids {
+		pmids = append(pmids, strings.TrimSpace(pmid.String()))
 	}
 	qrels := make(map[string]*trecresults.Qrel)
 	for _, pmid := range pmids {
@@ -98,6 +113,10 @@ func handleQueryFormulation(s searchrefiner.Server, c *gin.Context) {
 func (QueryFormulationPlugin) Serve(s searchrefiner.Server, c *gin.Context) {
 	if c.Request.Method == "POST" && c.Query("formulate") == "y" {
 		handleQueryFormulation(s, c)
+		return
+	}
+	if c.Request.Method == "GET" && c.Query("settings") == "y" {
+		handleFormulationSettings(s, c)
 		return
 	}
 	rawQuery := c.PostForm("query")

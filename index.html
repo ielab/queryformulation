@@ -21,25 +21,11 @@
         <div class="divider"></div>
         <div class="panel p-2">
             <h2 style="margin-left: 2%; margin-top: 1%">Query Formulation</h2>
-            <div class="divider" data-content="SET OF RELEVANT STUDY PMIDS"></div><br>
             <div class="panel-body container" style="overflow: hidden">
-                <div class="panel-footer">
-                    <span class="span-rg">
-                        <strong>
-                            Relevant Set of Study PMIDs
-                        </strong>
-                        <span style="color:red">
-                            *
-                        </span>
-                        : (Separate By Comma, Minimum 30)
-                    </span>
-                </div>
-                <div class="divider"></div>
-                <div class="panel-footer container">
-                    <textarea class="form-input" type="text" v-model="seeds" style="width:100%;" id="general-input" rows="5"></textarea>
-                </div>
                 <div class="divider"></div>
                 <div class="panel-footer">
+                    <span v-if="pmidCount == 0" class="text-error">No known relevant PMIDs have been loaded, please set the relevant PMIDs first.</span>
+                    <span v-if="pmidCount > 0" class="text-success">Loaded [[pmidCount]] Relevant PMIDs.</span>
                     <div>
                         <span class="span-rg">
                             <strong>
@@ -57,9 +43,6 @@
                     </select>
                 </div>
                 <div class="divider"></div>
-                <div class="panel-footer">
-                    <a href="#/" v-on:click="clearAll" style="width: 10%">Clear All</a>
-                </div>
 
                 <div class="panel-footer">
                     <button class="btn btn-primary" id="formulate-query" v-on:click="formulate">
@@ -92,11 +75,11 @@
     <!--suppress JSUnusedGlobalSymbols -->
     <script>
         var vm = new Vue({
-            delimiters: ["[[", "]"],
+            delimiters: ["[[", "]]"],
             el: "#app",
             data: {
-                seeds: null,
                 lang: "pubmed",
+                pmidCount: 0,
 
                 init: false,
                 ready: false,
@@ -105,14 +88,24 @@
                 meshQuery: null,
             },
             methods: {
+                loadPMIDs: function () {
+                    let self = this;
+                    let request = new XMLHttpRequest();
+                    request.addEventListener("load", function (ev) {
+                        if (ev.currentTarget.status === 200) {
+                            var idsRaw = ev.currentTarget.responseText;
+                            var ids = JSON.parse(idsRaw);
+                            self.pmidCount = ids.length;
+                        }
+                    });
+                    request.open("GET", "/plugin/queryformulation?settings=y", true);
+                    request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    request.send(null);
+                },
                 formulate: function () {
                     let self = this;
                     self.init = true;
                     self.ready = false;
-                    if (self.seeds === "" || self.seeds === null) {
-                        window.alert("Relevant Document PMIDs Are Required.")
-                        return;
-                    }
                     if (self.lang === "" || self.lang === null) {
                         window.alert("Return Format Is Required.")
                         return;
@@ -132,16 +125,11 @@
                     });
                     request.open("POST", "/plugin/queryformulation?formulate=y", true);
                     request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                    request.send("seeds=" + self.seeds + "&lang=" + self.lang);
-                },
-                clearAll: function () {
-                    this.seeds = null;
-                    this.init = false;
-                    this.ready = false;
-                    this.noMeshQuery = null;
-                    this.meshQuery = null;
-                    this.lang = null;
+                    request.send("&lang=" + self.lang);
                 }
+            },
+            beforeMount: function () {
+                this.loadPMIDs()
             }
         })
     </script>
