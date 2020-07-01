@@ -96,7 +96,7 @@
             el: "#app",
             data: {
                 seeds: null,
-                lang: null,
+                lang: "pubmed",
 
                 init: false,
                 ready: false,
@@ -130,7 +130,7 @@
                             el.classList.remove("loading");
                         }
                     });
-                    request.open("POST", "/api/formulate");
+                    request.open("POST", "/plugin/queryformulation?formulate=y", true);
                     request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                     request.send("seeds=" + self.seeds + "&lang=" + self.lang);
                 },
