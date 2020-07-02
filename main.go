@@ -71,7 +71,7 @@ func handleQueryFormulation(s searchrefiner.Server, c *gin.Context) {
 	population := formulation.NewPubMedSet(stat)
 	optimisation := eval.F1Measure
 	optionMinDocs := formulation.ObjectiveMinDocs(30)
-	optionGrid := formulation.ObjectiveGrid([]float64{0.05, 0.10, 0.15, 0.20, 0.25, 0.30}, []float64{0.001, 0.01, 0.02, 0.05, 0.10, 0.20}, []int{1, 5, 10, 15, 20, 25})
+	optionGrid := formulation.ObjectiveGrid([]float64{0.05, 0.15, 0.25}, []float64{0.01, 0.05, 0.10}, []int{1, 5, 10})
 	optionQuery := formulation.ObjectiveQuery(query)
 	objFormulator := formulation.NewObjectiveFormulator(s.Entrez, esClient, trecresults.QrelsFile{Qrels: map[string]trecresults.Qrels{"X": qrels}}, population, "None", "None", "cui_semantic_types.txt", s.Config.Services.MetaMapURL, optimisation, optionMinDocs, optionGrid, optionQuery)
 	q1, q2, _, _, _, err := objFormulator.Derive()
@@ -105,8 +105,8 @@ func handleQueryFormulation(s searchrefiner.Server, c *gin.Context) {
 		}
 	}
 	var strQueries = []string{q1Ret, q2Ret}
-	c.Header("Content-type", "application/json; charset=utf-8")
-	c.Header("Connection", "keep-alive")
+	//c.Header("Content-type", "application/json; charset=utf-8")
+	//c.Header("Connection", "keep-alive")
 	c.JSON(http.StatusOK, queryFormulationResponse{Query: strQueries})
 }
 
