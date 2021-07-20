@@ -8,7 +8,7 @@ import (
 	"github.com/hscells/transmute"
 	"github.com/hscells/trecresults"
 	"github.com/ielab/searchrefiner"
-	"gopkg.in/olivere/elastic.v7"
+	"github.com/olivere/elastic/v7"
 	"net/http"
 	"strings"
 )
@@ -140,6 +140,10 @@ func (QueryFormulationPlugin) Details() searchrefiner.PluginDetails {
 		Version:     "23.Jan.2020",
 		ProjectURL:  "ielab.io/searchrefiner",
 	}
+}
+
+func (QueryFormulationPlugin) Startup(s searchrefiner.Server) {
+
 }
 
 var Queryformulation = QueryFormulationPlugin{}
